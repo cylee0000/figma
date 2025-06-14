@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수행업무 개요 - Synergy Grid (수정)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            /* Synergy Grid Design System v1.0 */
+            --bg-canvas: hsl(210, 60%, 98%);
+            --accent-hue-primary: 214;
+            --surface-header: hsl(var(--accent-hue-primary), 80%, 55%);
+            --text-on-header: hsl(0, 0%, 100%);
+            --surface-sidebar-label: hsl(210, 30%, 94%);
+            --text-sidebar-label: hsl(var(--accent-hue-primary), 60%, 45%);
+            --surface-card: hsl(0, 0%, 100%);
+            --text-card-title: hsl(var(--accent-hue-primary), 70%, 35%);
+            --text-card-body: hsl(210, 15%, 45%);
+            --border-card: hsl(210, 25%, 88%);
+            --shadow-card: 0px 6px 18px hsla(210, 40%, 50%, 0.07), 0px 3px 9px hsla(210, 40%, 50%, 0.04);
+            --shadow-card-hover: 0px 10px 28px hsla(210, 40%, 50%, 0.1), 0px 5px 14px hsla(210, 40%, 50%, 0.07);
+
+            --font-family-main: "Figtree Variable", "Figtree", "Inter var", Inter, system-ui, sans-serif;
+            --font-main-title: clamp(1.5rem, 3.5vw, 2.2rem);
+            --font-grid-header: clamp(1rem, 2.2vw, 1.2rem);
+            --font-sidebar-label: clamp(0.9rem, 2vw, 1.05rem);
+            --font-card-title: clamp(0.9rem, 1.8vw, 1rem);
+            --font-card-body: clamp(0.8rem, 1.6vw, 0.875rem);
+
+            --spacing-unit: 8px;
+            --border-radius-card: 12px;
+            --border-radius-grid: 16px;
+
+            --animation-duration: 0.4s;
+            --animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-family-main);
+            background-color: var(--bg-canvas);
+            color: var(--text-card-body);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: calc(var(--spacing-unit) * 4);
+            overflow-x: hidden;
+        }
+
+        @keyframes cardEntranceAnimation {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes headerEntranceAnimation {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes sidebarEntranceAnimation {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .slide-container { width: 100%; max-width: 1200px; margin: 0 auto; }
+        .main-slide-title {
+            font-size: var(--font-main-title);
+            font-weight: 700;
+            color: hsl(var(--accent-hue-primary), 70%, 40%);
+            text-align: center;
+            margin-bottom: calc(var(--spacing-unit) * 5);
+            line-height: 1.4;
+            opacity: 0;
+            animation: cardEntranceAnimation 0.7s var(--animation-timing-function) 0.1s forwards;
+        }
+        .main-slide-title strong { font-weight: 800; color: hsl(var(--accent-hue-primary), 80%, 50%); }
+
+        .synergy-grid-container {
+            display: grid;
+            /* 사이드바 레이블 컬럼 + 데이터 컬럼 수만큼 1fr */
+            /* grid-template-columns: auto repeat(4, 1fr); Updated by JS */
+            /* 헤더 행 + 나머지 콘텐츠 영역은 자동으로 */
+            grid-auto-rows: min-content; /* 각 행의 높이가 내용에 맞게 조절 */
+            gap: 1px;
+            background-color: var(--border-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--border-radius-grid);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .grid-cell {
+            background-color: var(--bg-canvas);
+            padding: calc(var(--spacing-unit) * 1.5);
+            opacity: 0; /* Default for animation */
+        }
+        
+        .grid-header-cell {
+            background-color: var(--surface-header);
+            color: var(--text-on-header);
+            font-size: var(--font-grid-header);
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: calc(var(--spacing-unit) * 2);
+            position: sticky; top: 0; z-index: 10;
+            animation: headerEntranceAnimation 0.5s var(--animation-timing-function) forwards;
+            /* animation-delay set by JS via --animation-order */
+        }
+
+        .sidebar-label-cell {
+            background-color: var(--surface-sidebar-label);
+            padding: calc(var(--spacing-unit) * 2) var(--spacing-unit);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            grid-row: 2 / span var(--max-rows, 1); /* Span across content rows, var set by JS */
+            position: sticky; left: 0; z-index: 5;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            animation: sidebarEntranceAnimation 0.6s var(--animation-timing-function) 0.4s forwards; /* Appears after headers */
+        }
+        .sidebar-label-text {
+            font-size: var(--font-sidebar-label);
+            font-weight: 700;
+            color: var(--text-sidebar-label);
+            white-space: nowrap;
+        }
+        .sidebar-placeholder { /* Empty cell at [1,1] */
+             background-color: var(--surface-sidebar-label);
+             opacity: 1; /* No animation needed for placeholder */
+        }
+
+
+        .content-card-slot {
+            padding: calc(var(--spacing-unit) * 2);
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--spacing-unit) * 2);
+            background-color: var(--bg-canvas);
+            /* Opacity and animation handled by individual cards */
+            opacity: 1; /* Slot itself doesn't animate */
+        }
+        .content-card-slot:empty { /* Hide empty slots visually */
+            padding: 0; /* Remove padding if empty */
+            background-color: transparent; /* Make it truly invisible if no cards */
+        }
+
+
+        .content-card {
+            background: var(--surface-card);
+            border-radius: var(--border-radius-card);
+            border: 1px solid var(--border-card);
+            box-shadow: var(--shadow-card);
+            padding: calc(var(--spacing-unit) * 2);
+            position: relative;
+            transition: transform var(--animation-duration) var(--animation-timing-function),
+                        box-shadow var(--animation-duration) var(--animation-timing-function),
+                        border-color var(--animation-duration) var(--animation-timing-function);
+            opacity: 0; /* Initial state for JS animation */
+            /* animation handled by JS Intersection Observer */
+        }
+        .content-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: var(--shadow-card-hover);
+            border-color: hsl(var(--accent-hue-primary), 75%, 70%);
+        }
+        .card-pin-icon {
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            width: 20px; height: 20px;
+            background-color: hsl(var(--accent-hue-primary), 70%, 60%);
+            border-radius: 50%;
+            border: 3px solid var(--surface-card);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
+        .card-title {
+            font-size: var(--font-card-title);
+            font-weight: 700;
+            color: var(--text-card-title);
+            margin-bottom: calc(var(--spacing-unit) * 1);
+        }
+        .card-body-text {
+            font-size: var(--font-card-body);
+            line-height: 1.7;
+            color: var(--text-card-body);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .synergy-grid-container {
+                /* JS will update grid-template-columns for tablet */
+            }
+        }
+        @media (max-width: 767px) {
+            body { padding: calc(var(--spacing-unit) * 2); }
+            .main-slide-title { font-size: clamp(1.3rem, 5vw, 1.8rem); margin-bottom: calc(var(--spacing-unit) * 3); }
+            .synergy-grid-container {
+                display: flex;
+                flex-direction: column;
+                gap: calc(var(--spacing-unit) * 2);
+                border: none; box-shadow: none; background-color: transparent;
+            }
+            .grid-cell.sidebar-placeholder, .sidebar-label-cell { display: none; }
+            
+            .grid-header-cell {
+                position: static;
+                border-radius: var(--border-radius-card);
+                margin-bottom: var(--spacing-unit);
+                opacity: 1; transform: none; animation: none; /* Reset animation for stacked view */
+            }
+            .content-card-slot {
+                padding: 0;
+                opacity: 1; transform: none; animation: none; /* Reset animation */
+            }
+            .content-card {
+                 margin-bottom: var(--spacing-unit);
+                 opacity: 1; transform: none; animation: none; /* Reset animation */
+            }
+             /* Group cards under their respective headers for mobile */
+            .mobile-section { margin-bottom: calc(var(--spacing-unit) * 2); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+          .main-slide-title, .grid-header-cell, .sidebar-label-cell, .content-card {
+            opacity: 1 !important; transform: none !important; animation: none !important;
+          }
+        }
+    </style>
+</head>
+<body class="synergy-grid-slide theme-light">
+    <div class="slide-container">
+        <h1 class="main-slide-title">
+            데이터 기반 교육시설의 <strong>과학적 예방관리</strong>를 실현하고,<br>
+            거시적 관점의 교육시설 <strong>발전 방향, 정책 제안 및 효과 분석</strong>에 집중
+        </h1>
+        <div class="synergy-grid-container" id="synergyGrid">
+            <!-- Grid cells will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const gridData = {
+          "sidebarLabel": "수행업무",
+          "headers": [
+            { "id": "planning", "text": "연구 기획 및 관리" },
+            { "id": "research", "text": "정보 조사" },
+            { "id": "utilization", "text": "교육시설 활용성 제고" },
+            { "id": "exchange", "text": "국내외 교류" }
+          ],
+          "gridContent": [
+            [ // Column 1 content
+              { "id": "card1", "title": "예방관리", "text": "교육시설의 노후화, 현대화, 재난 발생 등에 따른 안전한 교육환경 조성을 위해 데이터 중심 과학적 설계·운영 개선방안 마련" },
+              { "id": "card2", "title": "이슈대응", "text": "교육시설의 사회적 이슈에 효과적으로 대응하고, 안전한 환경 조성을 위해 기술적인 규제 수준 향상 및 정책적 대안 마련" },
+              { "id": "card3", "title": "효과검증, 미래준비", "text": "거시적관점의 교육시설 발전 방향과 대응 전략, 정책 등을 선제적으로 제시하고 학교시설의 교육적 활용 효과 평가를 통해 시설사업 추진의 정당성 확보" }
+            ],
+            [ // Column 2 content
+              { "id": "card4", "title": "동향분석", "text": "국내외 교육시설 관련 정책 및 제도, 기술 및 산업 등에 관한 정보수집 및 분석을 통해 동향 및 이슈를 신속히 파악" },
+              { "id": "card5", "title": "미래전망", "text": "미래 교육환경 변화에 따른 교육시설 트렌드를 조사·분석하고, 교육생태계를 둘러싼 장·단기 발전과제 도출" },
+              { "id": "card6", "title": "리서치", "text": "교육시설 관련 학계, 산업계, 정부기관, 학교 등 다양한 출처의 자료를 조사·분석하여 사회적 이슈를 선제적으로 발견" }
+            ],
+            [ // Column 3 content
+              { "id": "card7", "title": "데이터", "text": "학교시설의 교육적 가치 제고를 위한 데이터 수집·분석 파이프라인을 구축하고, 원천 데이터 및 구조화된 데이터셋 제공" },
+              { "id": "card8", "title": "융합교육", "text": "교육시설 기반 실생활 교육콘텐츠와 창의적 체험활동 프로그램을 개발을 통해 AI, 기후변화, 에너지, 안전 등 교육 연계" },
+              { "id": "card9", "title": "공유 플랫폼", "text": "교육시설 관련 데이터와 콘텐츠를 공급하고, 교육시설 활용 교육 사례와 노하우를 공유하는 플랫폼 구축·운영" }
+            ],
+            [ // Column 4 content
+              { "id": "card10", "title": "공동연구", "text": "국내외 연구기관과 교육시설 공동연구 프로젝트 수행하고, 세계 유수 기관의 석학초청 강연 등 협력네트워크 구축" },
+              { "id": "card11", "title": "성과 보고회, 학술지 발간", "text": "연구성과 및 사례 공유를 위한 보고회 개최를 통해 교육시설 연구 발전을 도모하고, 정기간행물(학술지) 발간사업 등 추진" },
+              { "id": "card12", "title": "사회공헌, 공모전", "text": "교육격차해소, 에너지빈곤층 지원 등 사회공헌을 위한 교육지원 및 정책제안, 학교시설 기반 데이터 분석 및 시각화 공모전 개최" }
+            ]
+          ]
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const gridContainer = document.getElementById('synergyGrid');
+            let globalAnimationOrder = 0; // For staggering all animated elements
+
+            // Set grid columns based on headers + sidebar
+            gridContainer.style.gridTemplateColumns = `auto repeat(${gridData.headers.length}, 1fr)`;
+
+            // 1. Create Header Row
+            const sidebarPlaceholder = document.createElement('div');
+            sidebarPlaceholder.className = 'grid-cell sidebar-placeholder';
+            gridContainer.appendChild(sidebarPlaceholder);
+
+            gridData.headers.forEach((header, index) => {
+                const headerCell = document.createElement('header');
+                headerCell.className = 'grid-cell grid-header-cell';
+                headerCell.setAttribute('role', 'columnheader');
+                headerCell.textContent = header.text;
+                headerCell.style.setProperty('--animation-order', globalAnimationOrder++);
+                gridContainer.appendChild(headerCell);
+            });
+
+            // 2. Create Sidebar Label Cell (spans all content rows)
+            const sidebarLabelCell = document.createElement('aside');
+            sidebarLabelCell.className = 'grid-cell sidebar-label-cell';
+            sidebarLabelCell.setAttribute('role', 'rowheader');
+            const sidebarLabelText = document.createElement('h3');
+            sidebarLabelText.className = 'sidebar-label-text';
+            sidebarLabelText.textContent = gridData.sidebarLabel;
+            sidebarLabelCell.appendChild(sidebarLabelText);
+            gridContainer.appendChild(sidebarLabelCell);
+
+            // Calculate max rows for sidebar spanning
+            let maxRows = 0;
+            gridData.gridContent.forEach(col => {
+                if (col.length > maxRows) maxRows = col.length;
+            });
+            if (maxRows === 0) maxRows = 1; // Ensure at least 1 row span if no content
+            sidebarLabelCell.style.gridRow = `2 / span ${maxRows}`;
+
+
+            // 3. Create Content Card Slots and Cards
+            // This part needs to iterate column by column, and create a slot for each.
+            // Then, cards are appended to their respective column slots.
+            gridData.gridContent.forEach((columnCards, colIndex) => {
+                const slot = document.createElement('div');
+                slot.className = 'grid-cell content-card-slot';
+                slot.setAttribute('data-col', colIndex + 1);
+                // Slot itself doesn't need animation order, cards inside do.
+                
+                columnCards.forEach(cardData => {
+                    const cardElement = document.createElement('article');
+                    cardElement.className = 'content-card';
+                    cardElement.setAttribute('data-animate', 'true'); // For observer
+                    cardElement.style.setProperty('--animation-order', globalAnimationOrder++);
+                    
+                    cardElement.innerHTML = `
+                        <div class="card-pin-icon" aria-hidden="true"></div>
+                        <h4 class="card-title">${cardData.title}</h4>
+                        <p class="card-body-text">${cardData.text.replace(/\n/g, '<br>')}</p>
+                    `;
+                    slot.appendChild(cardElement);
+                });
+                gridContainer.appendChild(slot);
+            });
+
+            // Intersection Observer for animations
+            const animatedElements = document.querySelectorAll('.grid-header-cell, .sidebar-label-cell, .content-card[data-animate="true"]');
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const order = parseFloat(entry.target.style.getPropertyValue('--animation-order') || 0);
+                        let animationName = 'cardEntranceAnimation';
+                        let baseDelay = 0.5; // Base delay for cards after headers/sidebar
+                        
+                        if (entry.target.classList.contains('grid-header-cell')) {
+                            animationName = 'headerEntranceAnimation';
+                            baseDelay = 0.2; // Headers appear first
+                        } else if (entry.target.classList.contains('sidebar-label-cell')) {
+                            animationName = 'sidebarEntranceAnimation'; // Specific animation for sidebar
+                            baseDelay = 0.4; // Sidebar after headers
+                        }
+                        
+                        const delay = order * 0.07 + baseDelay;
+                        entry.target.style.animation = `${animationName} 0.6s var(--animation-timing-function) forwards ${delay}s`;
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.05 });
+
+            animatedElements.forEach(el => {
+                observer.observe(el);
+            });
+
+            // Responsive adjustments for mobile if needed (JS part)
+            function adjustForMobile() {
+                if (window.innerWidth <= 767) {
+                    const currentGridContainer = document.getElementById('synergyGrid');
+                    const currentHeaders = gridData.headers;
+                    const currentGridContent = gridData.gridContent;
+                    
+                    currentGridContainer.innerHTML = ''; // Clear existing grid
+
+                    currentHeaders.forEach((header, colIndex) => {
+                        // Create a section for each original column
+                        const mobileSection = document.createElement('div');
+                        mobileSection.className = 'mobile-section';
+
+                        const headerElement = document.createElement('header');
+                        headerElement.className = 'grid-cell grid-header-cell'; // Reuse styling
+                        headerElement.setAttribute('role', 'heading'); // More appropriate for sections
+                        headerElement.setAttribute('aria-level', '3');
+                        headerElement.textContent = header.text;
+                        headerElement.style.opacity = 1; headerElement.style.transform = 'none'; // Ensure visible
+                        mobileSection.appendChild(headerElement);
+
+                        const cardSlot = document.createElement('div');
+                        cardSlot.className = 'content-card-slot'; // Reuse styling
+                         cardSlot.style.opacity = 1; cardSlot.style.transform = 'none';
+
+                        (currentGridContent[colIndex] || []).forEach(cardData => {
+                            const cardElement = document.createElement('article');
+                            cardElement.className = 'content-card';
+                             cardElement.style.opacity = 1; cardElement.style.transform = 'none';
+                            cardElement.innerHTML = `
+                                <div class="card-pin-icon" aria-hidden="true"></div>
+                                <h4 class="card-title">${cardData.title}</h4>
+                                <p class="card-body-text">${cardData.text.replace(/\n/g, '<br>')}</p>
+                            `;
+                            cardSlot.appendChild(cardElement);
+                        });
+                        mobileSection.appendChild(cardSlot);
+                        currentGridContainer.appendChild(mobileSection);
+                    });
+                }
+                // else: Potentially rebuild desktop grid if it was cleared, or ensure CSS handles it.
+                // For this example, we assume CSS handles desktop if not mobile.
+            }
+            // adjustForMobile(); // Call on load
+            // window.addEventListener('resize', adjustForMobile); // And on resize
+            // Note: Simple reload or CSS-only might be better for resize to avoid complex DOM manipulation.
+            // The CSS already has media queries for mobile stacking. This JS part is an alternative
+            // if CSS grid limitations are hit for the mobile desired structure.
+            // Given the CSS, this JS part for mobile might be redundant unless more complex restructuring is needed.
+        });
+    </script>
+</body>
+</html>
